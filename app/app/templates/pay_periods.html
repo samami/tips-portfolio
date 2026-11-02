@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block head %}
+    {{ super() }}
+    <!-- Datepicker.css -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='datepicker.css') }}" />
+
+    <!-- Datepicker.js -->
+    <script type=text/javascript src="{{ url_for('static', filename='datepicker.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="pt-3">
+    <h1>Create Pay Period</h1>
+    <form action="{{url_for('payperiods_page')}}" method="post">
+        <div class="form-group">
+            <label for="payroll_period_ending">Pay Date: </label>
+            <input
+                    type="text"
+                    id="payroll_period_ending"
+                    name="payroll_period_ending"
+                    autocomplete="off"
+                    readonly
+                    class="form-control required"
+            />
+        </div>
+        <div class="form-group">
+            <label for="start_date">Start Date: </label>
+            <input
+                    type="text"
+                    id="start_date"
+                    name="start_date"
+                    autocomplete="off"
+                    readonly
+                    class="form-control required"
+                    required
+            />
+        </div>
+        <div class="form-group">
+            <label for="end_date">End Date: </label>
+            <input
+                    type="text"
+                    id="end_date"
+                    name="end_date"
+                    autocomplete="off"
+                    readonly
+                    class="form-control required"
+                    required
+            />
+        </div>
+        <input type="submit" value="Create Pay Period" class="btn btn-primary">
+    </form>
+    </div>
+<div class="pt-3">
+    <h1>List of Pay Period Ending Dates</h1>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Pay Date</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for key, value in periods.items(): %}
+            <tr>
+                <td>{{value['payroll_period_ending'] | formatdatetime }}</td>
+                <td>{{value['start_date'] | formatdatetime }}</td>
+                <td>{{value['end_date'] | formatdatetime }}</td>
+                <td><form action="{{url_for('pay_period_delete', id=key)}}" method="post">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <input type="submit" value="Delete" class="btn btn-danger">
+                </form>
+                </td>
+            </tr>
+	    {% endfor %}
+        </tbody>
+    </table>
+</div>
+<!-- Datepicker initialization -->
+    <script>
+      const d = new Datepicker(document.getElementById("payroll_period_ending"), {
+        first_date: new Date(2000, 0, 1),
+        initial_date: new Date(),
+        format: d => { return d.toISOString().substring(0,10) },
+        first_day_of_week: "Sunday"
+      });
+
+      const d2 = new Datepicker(document.getElementById("start_date"), {
+        first_date: new Date(2000, 0, 1),
+        initial_date: new Date(),
+        format: d2 => { return d2.toISOString().substring(0,10) },
+        first_day_of_week: "Sunday"
+      });
+
+      const d3 = new Datepicker(document.getElementById("end_date"), {
+        first_date: new Date(2000, 0, 1),
+        initial_date: new Date(),
+        format: d3 => { return d3.toISOString().substring(0,10) },
+        first_day_of_week: "Sunday"
+      });
+      </script>
+{% endblock %}

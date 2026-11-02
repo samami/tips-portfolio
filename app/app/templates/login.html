@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block nav %}{% endblock %}
+{% block content %}
+      <form id="login_form" action="{{ url_for('index') }}" method="post">
+        <h2>Please sign in</h2>
+          <div class="form-group">
+        <label for="inputEmail">Email address</label>
+        <input type="email" id="inputEmail" name="name"  placeholder="Email address" class="form-control" required autofocus>
+          </div>
+          <div class="form-group">
+        <label for="inputPassword">Password</label>
+        <input type="password" id="inputPassword" name="pass"  placeholder="Password" class="form-control" required>
+          </div>
+        <button class="btn btn-primary" type="submit" id="sign_in">Sign in</button>
+        <a class="btn btn-warning" type="submit" href="{{ url_for('reset_password') }}" id="reset_password">Reset Password</a>
+      </form>
+{% endblock %}

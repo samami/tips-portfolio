@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="pt-3">
+    <h1>Add Teammate</h1>
+    <form action="{{ url_for('provider_page') }}" method="post">
+        <div class="form-group">
+            <label for="provider_id">UniqueID: </label>
+            <input type="text" id="provider_id" name="provider_id" class="form-control" pattern="^[a-zA-Z0-9]+$" required>
+            <small id="uniqueid-help" class="form-text text-muted">*Cannot be updated. Must only use alphanumeric (No symbols or spaces)</small>
+        </div>
+        <div class="form-group">
+            <label for="first_name">First Name: </label>
+            <input type="text" id="first_name" name="first_name" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="last_name">Last Name: </label>
+            <input type="text" id="last_name" name="last_name" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="display_name">Display Name: </label>
+            <input type="text" id="display_name" name="display_name" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="is_active">Status: </label>
+            <select id="is_active" name="is_active" class="form-control">
+                <option value="True">Active</option>
+                <option value="False">Inactive</option>
+            </select></div>
+        <input type="submit" class="btn btn-primary">
+    </form>
+    </div>
+<div class="pt-3">
+    <h1>List of Teammates</h1>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Display Name</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for key, value in providers.items(): %}
+            <tr>
+                <td>{{key}}</td>
+                <td>{{value['display_name']}}</td>
+                <td>{{value['first_name']}}</td>
+                <td>{{value['last_name']}}</td>
+                <td>
+                    {% if value['is_active'] %}
+                        Active
+                    {% else %}
+                        Inactive
+                    {% endif %}
+                </td>
+                <td><a href="{{url_for('provider_edit', id=key)}}" class="btn btn-primary">Edit</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block head %}
+    {{ super() }}
+    <!-- Datepicker.css -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='datepicker.css') }}" />
+
+    <!-- Datepicker.js -->
+    <script type=text/javascript src="{{ url_for('static', filename='datepicker.js') }}"></script>
+{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+<form action="{{ url_for('tip_create') }}" method="post">
+    <div class="form-group">
+        <label for="payroll_end">Pay Period End Date: </label>
+        <select id="payroll_end" name="payroll_end" class="form-control">
+            {% for key, value in payroll_periods.items(): %}
+                {% if value['end_date'] %}
+                    <option value="{{key}}">{{value['end_date'] | formatdatetime}}</option>
+                {% else %}
+                    <option value="{{key}}">{{key | formatdatetime}} (Pay Date)</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="client">Client: </label>
+        <input type="text" id="client" name="client" class="form-control required" required autofocus></div>
+    <div class="form-group">
+        <label for="visit_date">Visit Date: </label>
+        <input
+            type="text"
+            id="visit_date"
+            name="visit_date"
+            autocomplete="off"
+            readonly
+            class="form-control required"
+            required
+        /></div>
+    <div class="form-group">
+        <label for="tipamount">Tip Amount: </label>
+        <input type="number" step="0.01" id="tipamount" name="tipamount" placeholder="0.00" class="form-control currency" required></div>
+    <div class="form-group">
+        <h3>Teammates</h3>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Teammate</th>
+                <th>AA</th>
+                <th>CO15</th>
+                <th>HC/RC</th>
+                <th>Tip Portion</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for key, value in providers.items(): %}
+            <tr>
+                <td>{{value['display_name']}}</td>
+                <input type="hidden" id={{key}} name="provider_id" value={{key}}>
+                {% for job in jobs_list %}
+                <td>
+                    <select id="{{key}}_{{job}}" name={{key}}_{{job}} class="form-control">
+                        {% for i in range(11) %}
+                        <option value="{{i}}">{{i}}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                {% endfor %}
+                <td>
+                    <input type="number" step="0.01" id="{{key}}_tipportion" name="{{key}}_tipportion" value="0.00" class="form-control currency" readonly>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <input type="submit" class="btn btn-primary">
+</form>
+
+<script>
+    function calculate_tips() {
+        let whole_tip = document.getElementById('tipamount').value
+        let effort_summary = {};
+        let provider_id = null;
+        let job = null;
+        jobs_list = {{jobs_list | tojson }}; //job name and effort points
+        const sumValues = obj => Object.values(obj).reduce((a, b) => a + b);
+
+        for (item of services) {
+            //Splits field name so we know which provider did which job
+            let providerId_job = item.id.split("_");
+            provider_id = providerId_job[0];
+            job = providerId_job[1];
+
+            if (!effort_summary[provider_id]) {
+                effort_summary[provider_id] = 0;
+            }
+            //Gives you effort summary by provider id. eg if dropdown is 2 and job effort is 15 then it would record
+            //an effort of 30 for that provider. As it loops it adds onto that number
+            effort_summary[provider_id] += item.value * jobs_list[job]
+        }
+
+        //Do actual calculations and display tip portions
+        let effort_total = sumValues(effort_summary);
+        tip_portions = document.querySelectorAll('[name$="_tipportion"]')
+        for (tip of tip_portions) {
+            provider_id = tip.id.split("_")[0];
+            new_tip_value = (effort_summary[provider_id] / effort_total * whole_tip);
+            if (isNaN(new_tip_value)) new_tip_value = 0; //Make sure that we don't get NaN when no effort is recorded
+            tip.value = new_tip_value.toFixed(2)
+        }
+    }
+
+    //Add listeners to services dropdowns
+    let services = document.querySelectorAll('select:not([id="payroll_end"])')
+    Array.from(services).forEach(item => {
+        item.addEventListener('change', event => {
+            calculate_tips();
+        })
+    })
+
+    //Add listener to tip entry field
+    document.getElementById('tipamount').addEventListener('change',function(event) {
+        calculate_tips();
+    });
+
+
+    //Force numbers to be two digits when currency related
+    let currency = document.getElementsByClassName('currency')
+    Array.from(currency).forEach(item => {
+        item.addEventListener('change', event => {
+            item.value = parseFloat(item.value).toFixed(2);
+        })
+    })
+</script>
+<!-- Datepicker initialization -->
+<script>
+  const d = new Datepicker(document.getElementById("visit_date"), {
+    first_date: new Date(2000, 0, 1),
+    initial_date: new Date(),
+    format: d => { return d.toISOString().substring(0,10) },
+    first_day_of_week: "Sunday"
+  });
+</script>
+{% endblock %}

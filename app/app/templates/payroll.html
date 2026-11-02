@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>List of Pay Periods</h1>
+    <form action="{{ url_for('payroll_summary_page') }}" method="post">
+        <div class="form-group">
+            <label for="pay_period_end">Pay Date: </label>
+            <select id="pay_period_end" name="pay_period_end" class="form-control">
+                {% for key, value in payroll_periods.items(): %}
+                <option value="{{key}}" {%if key == pay_period_end %}selected{% endif %}>{{key | formatdatetime}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <input type="submit" class="btn btn-primary">
+    </form>
+{% if summary %}
+<h1>Payout summary for pay date {{ pay_period_end|formatdatetime}}</h1>
+<h4>Period starting {{payroll_periods[pay_period_end]['start_date'] | formatdatetime }} and ending {{payroll_periods[pay_period_end]['end_date'] | formatdatetime }}</h4>
+<table class="table"><tr><td>
+    <table class="table">
+        <thead class="thead-dark">
+        <tr>
+            <th>By Teammate</th>
+            <th>Payout Totals</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr class="font-weight-bold">
+            <td>Tip Total</td>
+            <td>{{ "$%.2f" | format(summary['provider_tip_total']) }}</td>
+        </tr>
+        {% for value in summary['providers'].values()|sort(attribute='display_name'): %}
+            <tr>
+                <td>{{value['display_name']}}</td>
+                <td>{{ "$%.2f" | format(value['tips'] | sum()) }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</td><td>
+    <table class="table">
+        <thead class="thead-dark">
+        <tr>
+            <th>By Date</th>
+            <th>Daily Totals</th>
+        </tr>
+        </thead>
+        <tbody>
+            <tr class="font-weight-bold">
+                <td>Tip Total</td>
+                <td>{{ "$%.2f" | format(summary['tip_total']) }}</td>
+            </tr>
+        {% for visit_date, value in summary['visit_dates']|dictsort: %}
+            <tr>
+                <td>{{visit_date|formatdatetime}}</td>
+                <td>{{ "$%.2f" | format(value['tips'] | sum()) }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</td></tr></table>
+
+<h1>Tips for Pay Period</h1>
+    {% for tip_id, tip in tips.items()|sort(attribute='1.visit_date')|reverse: %}
+<div class="border rounded mt-1">
+    <table class="table table-sm m-0">
+        <thead>
+            <tr>
+                <th style="width: 30%">Client</th>
+                <th style="width: 30%">Tip Amount</th>
+                <th style="width: 30%">Visit Date</th>
+                <td style="width: 10%">
+                <form action="{{url_for('tip_delete', id=tip_id)}}" method="post">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <input type="submit" value="Delete" class="btn btn-danger btn-sm">
+                </form>
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td><button class="btn btn-link pt-0" data-toggle="collapse" data-target="#collapse{{tip['client']}}">{{tip['client']}}</button></td>
+            <td>{{ "$%.2f" | format(tip['tip_amount']|float) }}</td>
+            <td>{{tip['visit_date'] | formatdatetime}}</td>
+            <td></td>
+        </tr>
+        </tbody>
+    </table>
+        
+    <table id="collapse{{tip['client']}}" class="table table-sm collapse">
+        <thead>
+        <tr>
+            <th style="width: 30%">Teammate</th>
+            <th style="width: 15%">HC/RC</th>
+            <th style="width: 15%">AA</th>
+            <th style="width: 15%">CO15</th>
+            <th style="width: 25%">Tip Portion</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        {% for provider in tip['providers']|sort(attribute='display_name') %}
+        {% if provider['tipportion'] > 0 %}
+        <tr>
+            <td>{{ provider['display_name'] }}</td>
+            <td>{{ provider['HC']|int }}</td>
+            <td>{{ provider['AA']|int }}</td>
+            <td>{{ provider['CO15'] | int }}</td>
+            <td>{{ "$%.2f" | format(provider['tipportion']) }}</td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endfor %}
+    </div>
+{% else %}
+<h1>No Data</h1>
+{% endif %}
+
+{% endblock %}

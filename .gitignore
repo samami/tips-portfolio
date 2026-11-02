@@ -1,0 +1,7 @@
+# Runtime credentials and Firebase project configuration — never commit these.
+.env
+secrets/*
+!secrets/.gitkeep
+!secrets/*.example.json
+app/app/config/*.json
+!app/app/config/*.example.json
